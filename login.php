@@ -38,6 +38,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         //Prepare a select statement
         $sql = "SELECT user_id, username, password FROM userdata WHERE username = ?";
 
+
         if($stmt = $mysqli->prepare($sql)){
             //Bind variables to the prepared statment as parameters 
             $stmt->bind_param("s", $param_username);
@@ -66,6 +67,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             $_SESSION["user_id"] = $user_id;
                             $_SESSION["username"] = $username;
                             //$_SESSION["first_name"] = $first_name;
+
 
                             //Redirect user to welcome page
                             header("location: welcome.php");

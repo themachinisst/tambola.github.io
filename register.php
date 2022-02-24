@@ -221,31 +221,32 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         */
         
         //Prepare a select statement
-        if(empty($_POST["slot_id"])){
-            $slot_err = "Please enter a valid slot.";
-        }else{
-            // $mysqli->prepare function is used to prepare an SQL statement for execution.
-            if($stmt = $mysqli->prepare($sql)){
-                //bind variabes to the prepared statement as parameters
-                $stmt->bind_param("s",  $param_slot);
+        // if(empty($_POST["slot_id"])){
+        //     $slot_err = "Please choose a slot.";
+        // }else{
+        //     // $mysqli->prepare function is used to prepare an SQL statement for execution.
+        //     if($stmt = $mysqli->prepare($sql)){
+        //         //bind variabes to the prepared statement as parameters
+        //         $stmt->bind_param("s",  $param_slot);
 
-                //set parameters
-                $param_slot = trim($_POST["slot_id"]);
+        //         //set parameters
+        //         $param_slot = trim($_POST["slot_id"]);
 
-                //attempt to execute the prepared statement 
-                if($stmt->execute()){
+        //         //attempt to execute the prepared statement 
+        //         if($stmt->execute()){
                     
-                    //store results
-                    $stmt->store_result();
-                    $slot = trim($_POST["slot_id"]);
-                }else{
-                    echo "OOPs! Something went wrong. Please try again !";
-                }
-                //close statement
-                $stmt->close();
-            }
-        }
-     
+        //             //store results
+        //             $stmt->store_result();
+        //             $slot = trim($_POST["slot_id"]);
+        //         }else{
+        //             echo "OOPs! Something went wrong. Please try again !";
+        //         }
+        //         //close statement
+        //         $stmt->close();
+        //     }
+        // }
+            
+
     //For user's  slot  -----------END--------------------
 
     //For user's City ----------START-------------------
@@ -391,13 +392,22 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     //Check input errors before inserting in data base
     if(empty($first_name_err) && empty($last_name_err) && empty($password_err) && empty($confirm_password_err) && empty($username_err) && empty($email_err) && empty($age_err) && empty($phone_err) && empty($slot_err) && empty($city_err)){
             
+            // $checkbox1=$_POST['slot_id'];  
+            // $chk="";  
+            // foreach($checkbox1 as $chk1)  
+            // {  
+            //     $chk .= $chk1.",";  
+            // }  
+
         // Prepare an insert statement
-        $sql = "INSERT INTO userdata (first_name, last_name, username, password, email_id, age, phone, slot_id, city) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        //$sql = "INSERT INTO userdata (first_name, last_name, username, password, email_id, age, phone, slot_id, city) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO userdata (first_name, last_name, username, password, email_id, age, phone, city) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)";
           
         
         if($stmt = $mysqli->prepare($sql)){
             //Bind variables to the prepared statement as parameters
-            $stmt->bind_param("sssssiiss", $param_first_name, $param_last_name, $param_username, $param_password, $param_email, $param_age, $param_phone, $param_slot, $param_city);
+            //$stmt->bind_param("sssssiiss", $param_first_name, $param_last_name, $param_username, $param_password, $param_email, $param_age, $param_phone, $param_slot, $param_city);
+            $stmt->bind_param("sssssiis", $param_first_name, $param_last_name, $param_username, $param_password, $param_email, $param_age, $param_phone, $param_city);
 
             //set parameters 
             $param_first_name = $first_name;
@@ -406,8 +416,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $param_email = $email;
             $param_age = $age;
             $param_phone = $phone;
-            $param_slot = $slot;
+            //$param_slot = $slot;
             $param_city = $city;
+
+            
 
 
             //creates a password hash
@@ -426,18 +438,41 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             // $ticket_query = "INSERT INTO ticket SELECT user_id, slot_id, ticket_id
             // FROM userdata, masterticket WHERE assigned = 1 ORDER BY user_id, ticket_id DESC LIMIT 1;";
 
-            $ticket_query = "INSERT INTO ticket SELECT user_id, slot_id, ticket_id
-            FROM userdata, masterticket WHERE assigned = 0 ORDER BY user_id DESC, ticket_id ASC LIMIT 1;";
-            if(mysqli_query($mysqli, $ticket_query)){
-                
-            }
+            $checkbox1=$_POST['slot_id'];  
+            // $chk="";  
+            foreach($checkbox1 as $chk1)  
+            {  
+                // $chk .= $chk1.",";  
 
-            $assign_query = "UPDATE `masterticket` SET `assigned`= 1 WHERE assigned = 0 ORDER BY ticket_id ASC LIMIT 1;";
-            if(mysqli_query($mysqli, $assign_query)){
+
+                $ticket_query = "INSERT INTO ticket SELECT user_id, slot_id, ticket_id
+                FROM userdata, masterticket WHERE assigned = 0 ORDER BY user_id DESC, ticket_id ASC LIMIT 2;";
+                if(mysqli_query($mysqli, $ticket_query)){
+                    
+                }
+
+                //$slot_update_query = " UPDATE `ticket` SET slot_id = $chk1 WHERE user_id ORDER BY user_id DESC LIMIT 1;";
+                $slot_update_query = "UPDATE `ticket` SET slot_id = $chk1 WHERE ticket_id ORDER BY ticket_id DESC LIMIT 2;";
+                if(mysqli_query($mysqli, $slot_update_query)){
                 
-            }
+                }
+
+                $assign_query = "UPDATE `masterticket` SET `assigned`= 1 WHERE assigned = 0 ORDER BY ticket_id ASC LIMIT 2;";
+                if(mysqli_query($mysqli, $assign_query)){
+                
+                }
+
+
+
+                //for reflecting slots in slot table  --- start ---
+                $slot_assign = "UPDATE `slots` SET `booked_seats`= `booked_seats` + 1 WHERE slot_id = $chk1;";
+                if(mysqli_query($mysqli, $slot_assign)){
+                
+                }
+                //for reflecting slots in slot table  --- end ----
+            }  
             
-            //for assigneing ticket in ticket table --- end ----
+            //for assigning ticket in ticket table --- end ----
 
             //close statement
             $stmt->close();
@@ -461,6 +496,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <style>
         body{ font: 14px sans-serif; }
         .wrapper{ width: 360px; padding: 20px; }
+                
+        .form-group-slots label{
+            display: inline;
+        };
     </style>
 </head>
 
@@ -509,7 +548,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 <input type="hidden">
             </div>  
            
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <label>Preffered Slot : </label>
                 <select name="slot_id" class="form-control <?php echo (!empty($slot_err)) ? 'is-invalid' : '';?>"  value="<?php echo $slot; ?>" >
                     <option value="" disabled selected>Choose option</option>
@@ -520,7 +559,22 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 </select>
                 <span class="invalid-feedback"><?php echo $slot_err; ?></span>
                 <input type="hidden">
-            </div>  
+            </div>   -->
+
+            <div class="form-group-slots">    
+                <label>Preffered Slot : </label>
+                <input type="checkbox"  name="slot_id[]"  class="form-control <?php echo (!empty($slot_err)) ? 'is-invalid' : '';?>"  value="1">
+                <label for="slot_id">Slot 1</label><br>
+                <input type="checkbox"  name="slot_id[]"  class="form-control <?php echo (!empty($slot_err)) ? 'is-invalid' : '';?>"  value="2" >
+                <label for="slot_id">Slot 2</label><br>
+                <input type="checkbox"  name="slot_id[]"  class="form-control <?php echo (!empty($slot_err)) ? 'is-invalid' : '';?>"  value="3" >
+                <label for="slot_id">Slot 3</label><br>
+                <input type="checkbox"  name="slot_id[]"  class="form-control <?php echo (!empty($slot_err)) ? 'is-invalid' : '';?>"  value="4" >
+                <label for="slot_id">Slot 4</label><br>
+                <span class="invalid-feedback"><?php echo $slot_err; ?></span>
+                <input type="hidden">
+            </div>  <br>
+
             <div class="form-group">
                 <label>Email ID</label>
                 <input type="email" name="email_id" class="form-control <?php echo (!empty($email_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $email; ?>">
